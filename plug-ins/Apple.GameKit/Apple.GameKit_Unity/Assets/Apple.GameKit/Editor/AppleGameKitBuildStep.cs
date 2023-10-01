@@ -24,9 +24,11 @@ namespace Apple.GameKit.Editor
 #if UNITY_EDITOR_OSX && (UNITY_IOS || UNITY_TVOS || UNITY_STANDALONE_OSX)
         public override void OnProcessEntitlements(AppleBuildProfile _, BuildTarget buildTarget, string _1, PlistDocument entitlements)
         {
-            if(buildTarget == BuildTarget.StandaloneOSX)
+            // In Xcode 15, the Game Center entitlement is required for GameKit to work.
+            if(buildTarget == BuildTarget.StandaloneOSX || buildTarget == BuildTarget.iOS)
             {
                 entitlements.root.SetBoolean("com.apple.developer.game-center", true);
+                entitlements.root.SetString("aps-environment", "production");
             }
         }
 
