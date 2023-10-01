@@ -12,7 +12,7 @@ namespace Apple.GameKit
         #region Init & Dispose
         internal GKLocalPlayer(IntPtr pointer) : base(pointer) {}
         #endregion
-        
+
         #region IsAuthenticated
         [DllImport(InteropUtility.DLLName)]
         private static extern bool GKLocalPlayer_GetIsAuthenticated(IntPtr pointer);
@@ -25,7 +25,7 @@ namespace Apple.GameKit
             get => GKLocalPlayer_GetIsAuthenticated(Pointer);
         }
         #endregion
-        
+
         #region IsUnderage
         [DllImport(InteropUtility.DLLName)]
         private static extern bool GKLocalPlayer_GetIsUnderage(IntPtr pointer);
@@ -38,7 +38,7 @@ namespace Apple.GameKit
             get => GKLocalPlayer_GetIsUnderage(Pointer);
         }
         #endregion
-        
+
         #region IsMultiplayerGamingRestricted
         [DllImport(InteropUtility.DLLName)]
         private static extern bool GKLocalPlayer_GetIsMultiplayerGamingRestricted(IntPtr pointer);
@@ -51,7 +51,7 @@ namespace Apple.GameKit
             get => GKLocalPlayer_GetIsMultiplayerGamingRestricted(Pointer);
         }
         #endregion
-        
+
         #region IsPersonalizedCommunicationRestricted
         [DllImport(InteropUtility.DLLName)]
         private static extern bool GKLocalPlayer_GetIsPersonalizedCommunicationRestricted(IntPtr pointer);
@@ -64,13 +64,13 @@ namespace Apple.GameKit
             get => GKLocalPlayer_GetIsPersonalizedCommunicationRestricted(Pointer);
         }
         #endregion
-        
+
         #region Local
         [DllImport(InteropUtility.DLLName)]
         private static extern IntPtr GKLocalPlayer_GetLocal();
 
         private static GKLocalPlayer _local;
-        
+
         /// <summary>
         /// The shared instance of the local player.
         /// </summary>
@@ -88,10 +88,15 @@ namespace Apple.GameKit
             }
         }
         #endregion
-        
+
         #region FetchItems
+        private delegate void SuccessTaskFetchItemsCallback(long taskId, ulong timestamp,
+            IntPtr publicKeyUrl, int publicKeyUrlLength,
+            IntPtr signature, int signatureLength,
+            IntPtr salt, int saltLength);
+
         [DllImport(InteropUtility.DLLName)]
-        private static extern void GKLocalPlayer_FetchItems(IntPtr pointer, long taskId, SuccessTaskCallback<GKIdentityVerificationResponse> onSuccess, NSErrorTaskCallback onError);
+        private static extern void GKLocalPlayer_FetchItems(IntPtr pointer, long taskId, SuccessTaskFetchItemsCallback onSuccess, NSErrorTaskCallback onError);
 
         /// <summary>
         /// Generates a signature so that a third-party server can authenticate the local player.
@@ -104,9 +109,17 @@ namespace Apple.GameKit
             return tcs.Task;
         }
 
-        [MonoPInvokeCallback(typeof(SuccessTaskCallback<GKIdentityVerificationResponse>))]
-        private static void OnFetchItems(long taskId, GKIdentityVerificationResponse response)
+        [MonoPInvokeCallback(typeof(SuccessTaskFetchItemsCallback))]
+        private static void OnFetchItems(long taskId, ulong timestamp,
+            IntPtr publicKeyUrl, int publicKeyUrlLength,
+            IntPtr signature, int signatureLength,
+            IntPtr salt, int saltLength)
         {
+            var response = new GKIdentityVerificationResponse(timestamp,
+                publicKeyUrl, publicKeyUrlLength,
+                signature, signatureLength,
+                salt, saltLength);
+
             InteropTasks.TrySetResultAndRemove(taskId, response);
         }
 
@@ -116,7 +129,7 @@ namespace Apple.GameKit
             InteropTasks.TrySetExceptionAndRemove<GKIdentityVerificationResponse>(taskId, new GameKitException(errorPointer));
         }
         #endregion
-        
+
         #region Authenticate
         [DllImport(InteropUtility.DLLName)]
         private static extern void GKLocalPlayer_Authenticate(long taskId, SuccessTaskCallback<IntPtr> onSuccess, NSErrorTaskCallback onError);
@@ -148,7 +161,7 @@ namespace Apple.GameKit
             InteropTasks.TrySetExceptionAndRemove<GKLocalPlayer>(taskId, new GameKitException(errorPointer));
         }
         #endregion
-        
+
         #region LoadFriends
         [DllImport(InteropUtility.DLLName)]
         private static extern void GKLocalPlayer_LoadFriends(IntPtr pointer, long taskId, SuccessTaskCallback<IntPtr> onCallback, NSErrorTaskCallback onError);
@@ -179,7 +192,7 @@ namespace Apple.GameKit
             InteropTasks.TrySetExceptionAndRemove<NSArray<GKPlayer>>(taskId, new GameKitException(errorPointer));
         }
         #endregion
-        
+
         #region LoadChallengableFriends
         [DllImport(InteropUtility.DLLName)]
         private static extern void GKLocalPlayer_LoadChallengableFriends(IntPtr pointer, long taskId, SuccessTaskCallback<IntPtr> onCallback, NSErrorTaskCallback onError);
@@ -209,7 +222,7 @@ namespace Apple.GameKit
             InteropTasks.TrySetExceptionAndRemove<NSArray<GKPlayer>>(taskId, new GameKitException(errorPointer));
         }
         #endregion
-        
+
         #region LoadRecentPlayers
         [DllImport(InteropUtility.DLLName)]
         private static extern void GKLocalPlayer_LoadRecentPlayers(IntPtr pointer, long taskId, SuccessTaskCallback<IntPtr> onCallback, NSErrorTaskCallback onError);
